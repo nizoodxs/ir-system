@@ -5,9 +5,7 @@
  */
 
 package ir;
-import java.awt.Desktop;
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,8 +31,8 @@ import javafx.scene.control.TextArea;
  
 public final class MainApplication extends Application {
  
-    private final Desktop desktop = Desktop.getDesktop();
     public Extractor type = new Extractor();
+    public FileOperator fileOperator = new FileOperator();
  
     @Override
     public void start(final Stage stage) {
@@ -54,28 +52,29 @@ public final class MainApplication extends Application {
                 @Override
                 public void handle(final ActionEvent e) {
                     File file = fileChooser.showOpenDialog(stage);
-                    if (file != null) {
-                        try {
-                            String fileType = type.fileType(file);
-//                            c=content , m=metadata , 
-                            String fileContent = type.parseFile(file);
-                            HashMap<String, String> metadataMap = new HashMap<>();
-                            metadataMap = type.getMetadata(file);
-                            actiontarget.setText(fileType + ": \n" + fileContent);
-                            Iterator it = metadataMap.entrySet().iterator();
-                            StringBuilder completeMeta = new StringBuilder();
-                            while (it.hasNext()) {
-                                Map.Entry pair = (Map.Entry)it.next();
-                                completeMeta.append("\n").append(pair.getKey()).append(" = ").append(pair.getValue());
-//                                System.out.println(pair.getKey() + " = " + pair.getValue());
-                                it.remove(); // avoids a ConcurrentModificationException
-                            }
-                            metadataTextArea.setText(completeMeta.toString());
-//                            System.out.println(fileType);
-//                        openFile(file);
-                        } catch (Exception ex) {
-                            Logger.getLogger(MainApplication.class.getName()).log(Level.SEVERE, null, ex);
+                    String fileName = file.getName();
+                    try {
+                        String fileType = type.fileType(file);
+//                      c=content , m=metadata , 
+                        String fileContent = type.parseFile(file);
+                        HashMap<String, String> metadataMap = new HashMap<>();
+                        metadataMap = type.getMetadata(file);
+                        actiontarget.setText(fileType + ": \n" + fileContent);
+                        Iterator it = metadataMap.entrySet().iterator();
+                        StringBuilder completeMeta = new StringBuilder();
+                        while (it.hasNext()) {
+                            Map.Entry pair = (Map.Entry)it.next();
+                            completeMeta.append("\n").append(pair.getKey()).append(" = ").append(pair.getValue());
+//                          System.out.println(pair.getKey() + " = " + pair.getValue());
+                            it.remove(); // avoids a ConcurrentModificationException
                         }
+                        metadataTextArea.setText(completeMeta.toString());
+//                        System.out.println("file name : "+fileName+" "+"file content : "+fileContent+" "+"file type"+fileType);
+                        fileOperator.createFile(fileName, fileContent, fileType);
+//                      System.out.println(fileType);
+//                      fileOperator.openFile(file);
+                    } catch (Exception ex) {
+                        Logger.getLogger(MainApplication.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             });
@@ -117,16 +116,6 @@ public final class MainApplication extends Application {
  
     public static void main(String[] args) {
         Application.launch(args);
-    }
-
-    private void openFile(File file) {
-        try {
-            desktop.open(file);
-        } catch (IOException ex) {
-            Logger.getLogger(MainApplication.class.getName()).log(
-                    Level.SEVERE, null, ex
-                );
-        }
     }
 
 }
